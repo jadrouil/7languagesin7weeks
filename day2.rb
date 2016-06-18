@@ -61,3 +61,14 @@ class Tree
     block.call(self)
   end
 end
+
+
+
+def simple_grep(filename, phrase)
+  f = File.open(filename, "r")
+  linenum = 0
+  f.each do |line|
+    linenum += 1
+    puts "Found phrase on line #{linenum}: #{line}" if line.include? phrase
+  end
+end

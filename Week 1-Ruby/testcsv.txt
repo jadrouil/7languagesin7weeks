@@ -1,0 +1,3 @@
+sport, detroit, chicago
+football, lions, bears
+baseball, tigers, cubs

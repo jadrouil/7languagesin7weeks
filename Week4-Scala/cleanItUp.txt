@@ -1,0 +1,2 @@
+badWord,goodWord
+terribleWord,terrificWord

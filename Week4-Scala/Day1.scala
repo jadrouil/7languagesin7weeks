@@ -84,7 +84,7 @@ I am making the following assumptions:
         if(charInterest == 'X') return XWINS
         else if (charInterest == 'O') return OWINS
         else{
-                println("BADDDDD")
+                println("error: 3 characters in a row that aren't Xs or Os")
                 System.exit(1)
                 return TIE
         }

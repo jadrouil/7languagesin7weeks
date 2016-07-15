@@ -21,21 +21,19 @@ trait Censor{
 
 class Censorer(filename :String) extends Censor{
     import scala.io.Source
-    var switchWordstemp = Map("Shoot" -> "Pucky", "Darn" -> "Beans")
-    if(!filename.isEmpty) {
-        var arraySplit = Array[String]()
-        for (line <- Source.fromFile(filename).getLines) {
-            arraySplit = line.split(",")
-            switchWordstemp += arraySplit(0) -> arraySplit(1)
-        }
-        
-    }
-    val switchWords = switchWordstemp
 
-    def switchBadWords(str : String): String = {
-        if(switchWords.contains(str)){ return switchWords(str) }
-        return str
+    def loadMapFromFile(): Map[String,String] = filename.isEmpty match {
+        case false => Source.fromFile(filename).getLines
+                        .map(_.split(","))
+                        .map(x => x(0) -> x(1))
+                        .toMap
+        case _     => Map.empty
     }
+    
+    val switchWords = Map("Shoot" -> "Pucky", "Darn" -> "Beans") ++ loadMapFromFile()
+
+    def switchBadWords(str : String): String = switchWords.getOrElse(str, str)
+    
 }
 
 val tester = new Censorer("cleanItUp.txt")

@@ -31,7 +31,10 @@ doctor() ->
         {'EXIT', From, Reason} -> 
             io:format("The process ~p died with reason ~p ~n Starting another one.", [From, Reason]),
             self() ! new,
-            doctor()
+            doctor();
+        quit -> 
+            io:format("Doctor exiting.~n"),
+            exit({doctor, exit, at, erlang:time()})
     end.
 
 ask_translation(Word) ->

@@ -1,9 +1,9 @@
 -module(day3test).
 -export([all/0]).
--import(day3,[doctor/0, ask_translation/1]).
+-import(day3,[doctor/0, ask_translation/1, superviseDoctor/0]).
 
 
-setup() -> 
+setupTranslatorWDoctor() -> 
         Dr = spawn(fun day3:doctor/0),
         Dr ! new,
         register(dr, Dr),
@@ -22,15 +22,21 @@ setup() ->
  %This is also why I was able to run the test in the command line without an issue. 
  %I'm too slow to ever win the race with doctor.
 
- teardown()->
+ teardownTranslatorWDoctor()->
         dr ! quit.
-        
-all()->
-    setup(),
+    
+translatorWithDoctorTestSuite()-> 
+    setupTranslatorWDoctor(),
     shouldTranslateCasatoHouse(),
     shouldTranslateBlancatoWhite(),
     translatorShouldBeRevivedAfterKilling(),
-    teardown().
+    teardownTranslatorWDoctor().
+    
+all()->
+    translatorWithDoctorTestSuite(),
+    doctorWithSupervisorTestSuite().
+    
+    
 
 shouldTranslateCasatoHouse() ->
     ShouldBeHouse = "house",
@@ -46,3 +52,36 @@ translatorShouldBeRevivedAfterKilling() ->
     translator ! muere,
     timer:sleep(200),
     "house" = day3:ask_translation("casa").
+    
+ 
+ 
+ 
+ 
+ 
+ 
+doctorWithSupervisorTestSuite() ->
+    setupDoctorWSupervisor(),
+    doctorShouldBeRevivedAfterQutting(),
+    teardownDoctorWSupervisor().
+    
+ 
+ 
+ 
+ 
+ 
+doctorShouldBeRevivedAfterQutting() ->
+    dr ! quit,
+    timer:sleep(1000),
+    dr ! {checkIn, self()},
+    receive
+        T-> T = aknowledgement
+    end.
+
+setupDoctorWSupervisor() -> 
+    Supe = spawn(fun day3:superviseDoctor/0),
+    Supe ! new,
+    register(supervisor, Supe),
+    timer:sleep(1000).
+
+teardownDoctorWSupervisor() ->
+    supervisor ! quit.

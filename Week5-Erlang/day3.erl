@@ -1,5 +1,15 @@
+
+% http://learnyousomeerlang.com/errors-and-processes
+%Don't drink too much kool-aid:
+%You might have heard that Erlang is usually free of race conditions or deadlocks and makes parallel code safe. This is true in many circumstances, but never assume %your code is really that safe. Named processes are only one example of the multiple ways in which parallel code can go wrong.
+
+%Other examples include access to files on the computer (to modify them), updating the same database records from many different processes, etc.
+
+
+
+
 -module(day3).
--export([translate/0, doctor/0, ask_translation/1]).
+-export([translate/0, doctor/0, ask_translation/1, superviseDoctor/0]).
 
 translate() -> 
     receive
@@ -34,9 +44,27 @@ doctor() ->
             doctor();
         quit -> 
             io:format("Doctor exiting.~n"),
-            exit({doctor, exit, at, erlang:time()})
+            exit({doctor, exit, at, erlang:time()});
+        {checkIn, From} -> 
+            From ! aknowledgement
     end.
 
+superviseDoctor() ->
+    process_flag(trap_exit, true),
+    receive
+        new ->
+            io:format("Creating auto-heal doctor. ~n"),
+            register(dr, spawn_link(fun doctor/0)),
+            superviseDoctor();
+        {'EXIT', From, Reason} ->
+            io:format("Doctor ~p died with reason ~p ~n Starting another Dr.", [From, Reason]),
+            self() ! new,
+            superviseDoctor();
+        quit ->
+            io:format("supervisor died. ~n"),
+            exit(qutting)
+    end.
+    
 ask_translation(Word) ->
     translator ! {self(), Word},
     receive

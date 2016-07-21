@@ -1,7 +1,13 @@
 -module(day3test).
 -export([all/0]).
--import(day3,[doctor/0, ask_translation/1, superviseDoctor/0]).
+-import(day3,[doctor/0, ask_translation/1, superviseDoctor/0, doctorPair/0]).
 
+all()->
+     testRightLeftDoctors(),
+     translatorWithDoctorTestSuite(),
+     doctorWithSupervisorTestSuite().
+
+%part 1
 
 setupTranslatorWDoctor() -> 
         Dr = spawn(fun day3:doctor/0),
@@ -22,21 +28,6 @@ setupTranslatorWDoctor() ->
  %This is also why I was able to run the test in the command line without an issue. 
  %I'm too slow to ever win the race with doctor.
 
- teardownTranslatorWDoctor()->
-        dr ! quit.
-    
-translatorWithDoctorTestSuite()-> 
-    setupTranslatorWDoctor(),
-    shouldTranslateCasatoHouse(),
-    shouldTranslateBlancatoWhite(),
-    translatorShouldBeRevivedAfterKilling(),
-    teardownTranslatorWDoctor().
-    
-all()->
-    translatorWithDoctorTestSuite(),
-    doctorWithSupervisorTestSuite().
-    
-    
 
 shouldTranslateCasatoHouse() ->
     ShouldBeHouse = "house",
@@ -54,11 +45,22 @@ translatorShouldBeRevivedAfterKilling() ->
     "house" = day3:ask_translation("casa").
     
  
+
  
  
- 
- 
- 
+teardownTranslatorWDoctor()->
+        dr ! quit.
+    
+translatorWithDoctorTestSuite()-> 
+    setupTranslatorWDoctor(),
+    shouldTranslateCasatoHouse(),
+    shouldTranslateBlancatoWhite(),
+    translatorShouldBeRevivedAfterKilling(),
+    teardownTranslatorWDoctor().
+    
+    
+%part 2    
+
 doctorWithSupervisorTestSuite() ->
     setupDoctorWSupervisor(),
     doctorShouldBeRevivedAfterQutting(),
@@ -85,3 +87,36 @@ setupDoctorWSupervisor() ->
 
 teardownDoctorWSupervisor() ->
     supervisor ! quit.
+
+%part 3
+testRightLeftDoctors() ->
+    doctorPair(),
+    timer:sleep(200),
+    checkDoctorPairCheckIn(),
+    checkDoctorPairRevive(),
+    left ! terminate.
+    
+    
+checkDoctorPairRevive() ->
+    left ! kill,
+    timer:sleep(200),
+    checkDoctorPairCheckIn(),
+    right ! kill,
+    timer:sleep(200),
+    checkDoctorPairCheckIn().
+    
+checkDoctorPairCheckIn() ->
+    left ! {checkIn, self()},
+    receive
+        T -> T = aknowledgement
+    end,
+    right ! {checkIn, self()},
+    receive
+        R -> R = aknowledgement
+    end.
+    
+ 
+ 
+ 
+ 
+ 

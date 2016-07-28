@@ -44,7 +44,7 @@
     
 )
 
-
+;;use add-watch to react to changes in state of shared state
 (defn -main []
     (deposit (get accounts 0) 20.0)
     (assert (= (deref (get accounts 0)) 120.00))

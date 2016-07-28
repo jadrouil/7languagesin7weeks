@@ -21,9 +21,5 @@
     (assert (= (:originalStock (dispense undertest)) 2))
     (assert (= (:originalStock (restock undertest)) 4))
     (println "done with VendingMachine protocol")
-    ;(assert (= (collection-type []) :vector))
-    ;(assert (= (collection-type '(1)) :list))
-    ;(assert (= (collection-type {}) :map))
-    ;(assert (= (collection-type '()) :list))
-    ;(println "done with col type")
+
 )

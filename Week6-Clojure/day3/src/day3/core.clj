@@ -14,37 +14,62 @@
   (dosync (alter account -  n))
 )
 
-(comment 
-            (def waitingRoom (ref 0)) ;;waitingRoom initialized to zero 
-            (defn attemptAddToWaitingRoom
-                "attempts to add a customer to the waitingRoom"
-                []
-                (dosync (if (< @waitingRoom 3) 
-                            (alter waitingRoom + 1)))
-            )
+;;part 2 
+(def waitingRoom (ref 0)) 
 
-            (defn attemptTakeFromWaitingRoom
-                "moves client from waitingRoom"
-                []
-                (dosync (if (> @waitingRoom 0)
-                            (alter waitingRoom - 1)))
-            )
-)
-(defn getWaiter [wR]
-    (do (if (not (empty wR)) (pop wR))))
-(defn addWaiter  [wR]
-    (if (< (count wR) 3) (conj wR true))
+(defn cuthair
+    "instructs barber to cut hair"
+    [x]
+    (do
+        (println "cutting hair")
+        (dosync (alter waitingRoom - 1))
+        (Thread/sleep 20)
+        (+ x 1)
+    )
+)   
+
+
+
+(def clientSpawner (agent 0))
+(def barber (agent 0))
+
+
+(defn addClient
+    "adds client to waitingRoom if possible for barber b"
+    [b]
+    (if (< @waitingRoom 3)
+        (do
+            (println "client adding")
+            (dosync (alter waitingRoom + 1))
+            (send b cuthair)
+            (println (str (agent-error b)))
+        )
+    )
 )
 
-(defn runHairCutSimulator 
-    "runs the part2 haircut simulator"
-    []
-    (def haircutsGiven (atom 0))
-    (def waitingRoom (agent [])) 
-    
+(defn spawnClients
+    "continously spawns clients with random sleep for n seconds, b is the barber "
+    [self, n, b]
+    ;(dotimes [i (* n 1000)]  ;;n * 1000 is the maximum amount of clients to occur in n seconds
+     ;   (do 
+     ;       (Thread/sleep (+ (rand-int 21) 10)) ; max value is 20 + 10, min is 0 + 10 
+     ;       (addClient b)
+     ;   )
+    ;)
+    (send b cuthair)
 )
 
-;;use add-watch to react to changes in state of shared state
+
+(defn runHaircutSimulation 
+    "runs haircut simulator for n seconds"
+    [n]
+    (send clientSpawner spawnClients n barber)
+    (Thread/sleep (* n 1000))
+    (println (str "Haircuts given: " @barber ))
+)            
+
+
+
 (defn -main []
     (deposit (get accounts 0) 20.0)
     (assert (= (deref (get accounts 0)) 120.00))
@@ -52,22 +77,11 @@
     (assert (=  (deref (get accounts 0)) 20.00))
     (println "done with part 1")
     
-    (comment
-        (attemptTakeFromWaitingRoom)
-        (assert (= @waitingRoom 0))
-        (attemptAddToWaitingRoom)
-        (assert (= @waitingRoom 1))
-        (attemptAddToWaitingRoom)
-        (assert (= @waitingRoom 2))
-        (attemptAddToWaitingRoom)
-        (assert (= @waitingRoom 3))
-        (attemptAddToWaitingRoom)
-        (assert (= @waitingRoom 3))
-        (attemptTakeFromWaitingRoom)
-        (assert (= @waitingRoom 2))
-    )
-    (println "barbershop waitingRoom fills/empties correctly")
-    (runHairCutSimulator)
-    (println (str "number of haircuts given: " @haircutsGiven))
+ ;   (send barber cuthair)
+ ;   (await barber)
+ ;   (assert (= @barber 1))
+    (runHaircutSimulation 10)
+    
+    
     
 )

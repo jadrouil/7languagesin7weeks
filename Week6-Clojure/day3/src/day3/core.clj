@@ -48,20 +48,19 @@
 (defn spawnClients
     "continously spawns clients with random sleep for n milliseconds, b is the barber "
     [n, b]
-    (let []
-        (loop [totalTimePassed 0]
-            (let [randomPause (+ (rand-int 21) 10)]
-                (if (< (+ totalTimePassed randomPause) n)
-                    (do
-                        (Thread/sleep randomPause)
-                        (addClient b)
-                        (recur (+ totalTimePassed randomPause))
-                    )
+    (loop [totalTimePassed 0]
+        (let [randomPause (+ (rand-int 21) 10)]
+            (if (< (+ totalTimePassed randomPause) n)
+                (do
+                    (Thread/sleep randomPause)
+                    (addClient b)
+                    (recur (+ totalTimePassed randomPause))
                 )
             )
         )
     )
 )
+
     
 
 

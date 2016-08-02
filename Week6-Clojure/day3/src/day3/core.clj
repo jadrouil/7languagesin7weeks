@@ -15,13 +15,15 @@
 )
 
 ;;part 2 
+
+;;for some reason the clients sends aren't registering on the barber?
+;;it may have something to do with being inside the do or dosync
 (def waitingRoom (ref 0)) 
 
 (defn cuthair
     "instructs barber to cut hair"
     [x]
     (do
-        (println "cutting hair")
         (dosync (alter waitingRoom - 1))
         (Thread/sleep 20)
         (+ x 1)
@@ -30,43 +32,49 @@
 
 
 
-(def clientSpawner (agent 0))
-(def barber (agent 0))
-
 
 (defn addClient
     "adds client to waitingRoom if possible for barber b"
     [b]
     (if (< @waitingRoom 3)
         (do
-            (println "client adding")
             (dosync (alter waitingRoom + 1))
-            (send b cuthair)
-            (println (str (agent-error b)))
+            (send-off b cuthair)
+            (release-pending-sends) ;;super duper important -- clojure agents won't send messages to other agents until the end of the agent's execution. Unless, of course, you explicitly release the messages.
         )
     )
 )
 
 (defn spawnClients
-    "continously spawns clients with random sleep for n seconds, b is the barber "
-    [self, n, b]
-    ;(dotimes [i (* n 1000)]  ;;n * 1000 is the maximum amount of clients to occur in n seconds
-     ;   (do 
-     ;       (Thread/sleep (+ (rand-int 21) 10)) ; max value is 20 + 10, min is 0 + 10 
-     ;       (addClient b)
-     ;   )
-    ;)
-    (send b cuthair)
+    "continously spawns clients with random sleep for n milliseconds, b is the barber "
+    [n, b]
+    (let []
+        (loop [totalTimePassed 0]
+            (let [randomPause (+ (rand-int 21) 10)]
+                (if (< (+ totalTimePassed randomPause) n)
+                    (do
+                        (Thread/sleep randomPause)
+                        (addClient b)
+                        (recur (+ totalTimePassed randomPause))
+                    )
+                )
+            )
+        )
+    )
 )
+    
+
 
 
 (defn runHaircutSimulation 
     "runs haircut simulator for n seconds"
     [n]
-    (send clientSpawner spawnClients n barber)
-    (Thread/sleep (* n 1000))
-    (println (str "Haircuts given: " @barber ))
-)            
+    (def barber (agent 0))
+    (def clientSpawner (delay (spawnClients (* n 1000) barber) @barber))
+    (println (str "Haircuts given: " @clientSpawner ))
+    
+    (shutdown-agents)
+)
 
 
 
@@ -77,11 +85,7 @@
     (assert (=  (deref (get accounts 0)) 20.00))
     (println "done with part 1")
     
- ;   (send barber cuthair)
- ;   (await barber)
- ;   (assert (= @barber 1))
     (runHaircutSimulation 10)
-    
     
     
 )

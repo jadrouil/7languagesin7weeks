@@ -69,7 +69,7 @@
     "runs haircut simulator for n seconds"
     [n]
     (def barber (agent 0))
-    (def clientSpawner (delay (spawnClients (* n 1000) barber) @barber))
+    (def clientSpawner (future (spawnClients (* n 1000) barber) @barber))
     (println (str "Haircuts given: " @clientSpawner ))
     
     (shutdown-agents)
